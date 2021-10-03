@@ -1,4 +1,6 @@
+import { Interval } from '../../signal/Interval';
 import { sPrint } from '../../unit/Scalar';
+import { AbstractChord, cChord, Chord } from './Chord';
 import { nIsEqual, Note } from './Note';
 
 type Notes <TNoteName extends string> =  Record<TNoteName, Note>;
@@ -29,12 +31,18 @@ const cnPrint  = function <TNoteName extends string>
 {
   const identify = cnIdentify(system);
 
-  return (note: Note) => `${identify(note)}: ${sPrint(note)}`;
+  return (note: Note) => {
+    const names = identify(note);
+    const name = names ? names[0] : '?';
+
+    return `${name} @ ${sPrint(note)}`
+  };
 };
 
 interface System <TNoteName extends string> extends AbstractSystem<TNoteName> {
   identify: (note: Note) => TNoteName[] | undefined;
   print: (note: Note) => string;
+  chord: (...intervals: Interval[]) => AbstractChord<TNoteName>;
 }
 
 const system = function <TNoteName extends string>
@@ -44,7 +52,8 @@ const system = function <TNoteName extends string>
   return {
     ...abstract,
     identify: cnIdentify(abstract),
-    print: cnPrint(abstract)
+    print: cnPrint(abstract),
+    chord: cChord({ identify: cnIdentify(abstract)})
   };
 }
 

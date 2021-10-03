@@ -1,6 +1,6 @@
 import { fShiftBy } from '../../signal/Frequency';
 import { Interval } from '../../signal/Interval';
-import { isOctave, octavesBetween } from '../convention/twelveToneEqualTemperament/intervals';
+import { isOctave } from '../convention/twelveToneEqualTemperament/intervals';
 import { Note } from './Note';
 
 interface AbstractScale {
@@ -9,6 +9,7 @@ interface AbstractScale {
 
 interface Scale {
   notes: Note[];
+  degree: (i: number) => Note | undefined;
 }
 
 /**
@@ -36,7 +37,6 @@ const actualize = function (scale: AbstractScale, tonic: Note, options: {
   let octavesGenerated = 0;
 
   for (;;) {
-    console.log(octavesBetween(tonic, currentNote));
     if (isOctave(tonic, currentNote)) {
       octavesGenerated += 1;
     }
@@ -55,7 +55,8 @@ const actualize = function (scale: AbstractScale, tonic: Note, options: {
   }
 
   return {
-    notes
+    notes,
+    degree: (i) => notes[i]
   };
 };
 

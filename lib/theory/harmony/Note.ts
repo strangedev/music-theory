@@ -22,7 +22,9 @@ const cIntervalsBetween = function
   n = log(y / x) / log(i)
   */
 {
-  return (x, y) => u(y.value.div(x.value).div(i.value.log()))
+  return (x, y) => {
+    return u(y.value.div(x.value).log().div(i.value.log()).toNearest(0.01));
+  }
 }
 
 const cIsInterval = function
