@@ -1,50 +1,94 @@
-import { fShiftBy } from '../../signal/Frequency';
 import { Interval } from '../../signal/Interval';
 import { Note } from './Note';
-import { System } from './System';
+import { TuningSystem } from './System';
+class AbstractChord <TNoteName extends string> {
+  protected intervals: Interval[];
+  protected system: TuningSystem<TNoteName>;
 
-interface AbstractChord <TNoteName extends string> {
-  intervals: Interval[];
-  system:  Pick<System<TNoteName>, 'identify'>;
-}
-
-interface Chord <TNoteName extends string> extends AbstractChord <TNoteName> {
-  notes: Note[];
-  toString: () => string;
-}
-
-const cChord = function <TNoteName extends string>
-  (system: Pick<System<TNoteName>, 'identify'>):
-  (...intervals: Interval[]) => AbstractChord<TNoteName>
-{
-  return (...intervals) => ({
-    system,
-    intervals
-  });
-};
-
-const construct = function <TNoteName extends string>
-  (abstract: AbstractChord<TNoteName>, root: Note):
-  Chord<TNoteName>
-{
-  const notes = [ root ];
-
-  for (const interval of abstract.intervals) {
-    notes.push(fShiftBy(root, interval));
+  protected constructor ({
+    intervals,
+    system
+  }: {
+    intervals: Interval[];
+    system: TuningSystem<TNoteName>;
+  })
+  {
+    this.intervals = intervals;
+    this.system = system;
   }
 
-  return {
-    ...abstract,
-    notes,
-    toString: () => `${notes.map(abstract.system.identify)}`
-  };
-};
+  public at (root: Note<TNoteName>): Chord<TNoteName>
+  {
+    return Chord.FromSystem(this.system)(root, ...this.intervals);
+  }
 
-export type {
+  public toString (): string
+  {
+    return `(R ${this.intervals.join(' ')})`;
+  }
+
+  public static FromSystem <TNoteName extends string> (system: TuningSystem<TNoteName>):
+    (...intervals: Interval[] | any) => AbstractChord<TNoteName>
+  {
+    return (...intervals) => new AbstractChord({ intervals, system });
+  }
+}
+
+class Chord <TNoteName extends string> extends AbstractChord<TNoteName>
+{
+  public notes: Note<TNoteName>[];
+
+  protected constructor ({
+    notes,
+    intervals,
+    system
+  }: {
+    notes: Note<TNoteName>[];
+    intervals: Interval[];
+    system: TuningSystem<TNoteName>
+  })
+  {
+    super({
+      intervals,
+      system
+    });
+    this.notes = notes;
+  }
+
+  public toString (): string
+  {
+    return `(${this.notes.join(' ')})`
+  }
+
+  public static FromSystem <TNoteName extends string> (system: TuningSystem<TNoteName>):
+    (root: Note<TNoteName>, ...intervalsOrNotes: Interval[] | Note<TNoteName>[]) => Chord<TNoteName>
+  {
+    return (root, ...intervalsOrNotes) => {
+      let intervals: Interval[] = [];
+      let notes: Note<TNoteName>[] = [ root ];
+
+      if (intervalsOrNotes.length === 0) {
+        return new Chord({ intervals, system, notes })
+      }
+      if (intervalsOrNotes[intervalsOrNotes.length - 1]?.u === 'Hz') {
+        notes = intervalsOrNotes as Note<TNoteName>[];
+        for (let i = 1; i < notes.length; i++) {
+          intervals.push(Interval.between(notes[0], notes[i]))
+        }
+      } else {
+        intervals = intervalsOrNotes as Interval[];
+
+        for (const interval of intervals) {
+          notes.push(Note.FromSystem(system)(root.shift(interval)));
+        }
+      }
+
+      return new Chord({ intervals, system, notes })
+    };
+  }
+}
+
+export {
   AbstractChord,
   Chord
-};
-export {
-  cChord,
-  construct
 };

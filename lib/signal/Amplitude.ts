@@ -1,8 +1,9 @@
-import Decimal from 'decimal.js';
 import { Scalar } from '../unit/Scalar';
 
 const dB = '[dB]: Decibel. Pseudo unit for relative amplitude.';
-type Decibel = Scalar<Decimal, typeof dB>;
+class Decibel extends Scalar<typeof dB> {
+
+}
 
 export type {
   Decibel

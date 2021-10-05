@@ -1,20 +1,47 @@
-import { fmap } from '../unit/Scalar';
-import { u, Unitless } from '../unit/UnitLess';
+import { NumberType, s, Scalar } from '../unit/Scalar';
+import { Hertz } from './Frequency';
+class Interval extends Scalar
+{
+  public scale (factor: Scalar): Interval
+  {
+    return new Interval(this.v.mul(factor.v));
+  }
 
-type Interval = Unitless;
+  public times (factor: Scalar): Interval
+  {
+    return new Interval(this.v.pow(factor.v));
+  }
 
-const ivl = function (ratio: number): Interval {
-  return u(ratio);
-};
+  public numBetween (low: Hertz, high: Hertz): Scalar
+  {
+    return s(high.v.div(low.v).log().div(this.v.log()).toNearest(0.01));
+  }
 
-const iAdd = (x: Interval, y: Interval): Interval => fmap((value) => value.add(y.value), x);
-const iScale = (x: Interval, c: Unitless): Interval => fmap((value) => value.pow(c.value), x);
+  public static between (low: Hertz, high: Hertz): Interval
+  {
+    return new Interval(high.v.div(low.v));
+  }
 
-export type {
-  Interval
-};
+  public matches (low: Hertz, high: Hertz): boolean
+  public matches (other: Interval): boolean
+  public matches (lowerOrOther: Hertz | Interval, high?: Hertz): boolean {
+    const otherInterval = high ?
+      Interval.between(lowerOrOther as Hertz, high)
+      :
+      lowerOrOther as Interval
+
+    return this.equals(otherInterval);
+  }
+
+  public toString (): string
+  {
+    return `<1:${this.v}>`;
+  }
+}
+
+const interval = (ratio: NumberType): Interval => new Interval(ratio);
+
 export {
-  ivl,
-  iAdd,
-  iScale
+  Interval,
+  interval
 };

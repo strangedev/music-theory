@@ -1,7 +1,6 @@
-import { Hz } from '../../signal/Frequency';
-import { f, s } from '../../unit/Scalar';
+import { Hertz } from '../../signal/Frequency';
 
-const concertA = s(f(440), Hz);
+const concertA = new Hertz(440);
 
 export {
   concertA
