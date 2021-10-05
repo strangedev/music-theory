@@ -1,23 +1,32 @@
-import { fmap, Scalar } from '../unit/Scalar';
+import { NumberType, Scalar } from '../unit/Scalar';
 import { Interval } from './Interval';
-import { Decimal } from 'decimal.js';
-import { Unitless } from '../unit/UnitLess';
 
 const Hz = 'Hz';
-type Hertz = Scalar<Decimal, typeof Hz>;
 
-const fAdd = (x: Hertz, y: Hertz): Hertz => fmap((value) => value.add(y.value), x);
-const fScale = (x: Hertz, c: Unitless): Hertz => fmap((value) => value.mul(c.value), x);
+class Hertz extends Scalar<typeof Hz>
+{
+  public constructor (value: NumberType)
+  {
+    super(value, Hz);
+  }
 
-const fShiftBy = function (f: Hertz, i: Interval): Hertz {
-  return fScale(f, i);
-};
+  public add (other: Hertz): Hertz
+  {
+    return new Hertz(this.v.add(other.v));
+  }
 
-export type {
-  Hertz
-};
+  public scale (factor: Scalar): Hertz
+  {
+    return new Hertz(this.v.mul(factor.v));
+  }
+
+  public shift (interval: Interval): Hertz
+  {
+    return this.scale(interval);
+  }
+}
+
 export {
-  Hz,
-  fAdd,
-  fShiftBy
+  Hertz,
+  Hz
 };

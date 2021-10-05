@@ -1,9 +1,10 @@
-import { u } from '../../../unit/UnitLess';
-import { nTranspose } from '../../harmony/Note';
-import { NamedNotes, Notes, System, system } from '../../harmony/System';
+import { s } from '../../../unit/Scalar';
+import { NamedNotes, Notes, TuningSystem } from '../../harmony/System';
 import { concertA } from '../concertA';
 import { octave, semitone } from './intervals';
 
+const octaves = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ] as const;
+type Octaves = typeof octaves[number];
 const noteNames = [
   'A',
   'As', 'Bb',
@@ -18,8 +19,7 @@ const noteNames = [
   'G',
   'Gs', 'Ab'
 ] as const;
-type NoteNames = typeof noteNames[number];
-type NoteName = `${NoteNames}${number}`;
+type NoteNames = `${ typeof noteNames[number] }${ Octaves }`
 
 const realNotes = [
   [ 'A' ],
@@ -34,54 +34,51 @@ const realNotes = [
   [ 'Fs', 'Gb' ],
   [ 'G' ],
   [ 'Gs', 'Ab' ]
-] as NoteNames[][];
+] as (typeof noteNames[number])[][];
 
-const twelveTone = function
-  (A = concertA):
-  System<NoteName>
+class TwelveTone extends TuningSystem<NoteNames> 
 {
-  const A0 = nTranspose(A, octave, u(-4));
-  const notes: Notes<NoteName> = {};
-  const names: NamedNotes<NoteName> = [];
-  const numOctaves = 7;
-  const numNotes = numOctaves * 12 + 1;
-
-  for (
-    let iNote = 0,
-    iNames = 0,
-    octave = 0,
-    note = A0
-    ;
-    iNote < numNotes
-    ;
-    iNote++,
-    iNames = (iNames + 1) % 12)
+  constructor (A=concertA)
   {
-    octave = Math.floor((iNote + 9) / 12);
-    
-    const noteNames = realNotes[iNames].map((name): NoteName => `${name}${octave}`);
+    const A0 = A.shift(octave.times(s(-4)));
+    const frequencies: Partial<Notes<NoteNames>> = {};
+    const names: NamedNotes<NoteNames> = [];
+    const numNotes = octaves.length * 12 + 1;
 
-    names.push({
-      note,
-      names: noteNames
-    });
+    for (
+      let iNote = 0,
+      iNames = 0,
+      octave: Octaves = 0,
+      frequency = A0
+      ;
+      iNote < numNotes
+      ;
+      iNote++,
+      iNames = (iNames + 1) % 12)
+    {
+      octave = Math.floor((iNote + 9) / 12) as Octaves;
+      
+      const noteNames = realNotes[iNames].map((name): NoteNames => `${name}${octave}`);
 
-    for (const name of noteNames) {
-      notes[name] = note;
+      names.push({
+        frequency,
+        names: noteNames
+      });
+  
+      for (const name of noteNames) {
+        frequencies[name] = frequency;
+      }
+  
+      frequency = frequency.shift(semitone);
     }
 
-    note = nTranspose(note, semitone);
+    super({
+      frequencies: frequencies as Notes<NoteNames>,
+      noteNames: names
+    });
   }
+}
 
-  return system<NoteName> ({
-    notes,
-    names
-  });
-};
-
-export type {
-  NoteName
-};
 export {
-  twelveTone
+  TwelveTone
 };

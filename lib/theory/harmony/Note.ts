@@ -1,52 +1,62 @@
 import { Hertz } from '../../signal/Frequency';
 import { Interval } from '../../signal/Interval';
-import { fmap, sPrint } from '../../unit/Scalar';
-import { u, Unitless } from '../../unit/UnitLess';
+import { s, Scalar } from '../../unit/Scalar';
+import { TuningSystem } from './System';
 
-type Note = Hertz;
-
-const nIsEqual = (x: Note, y: Note): boolean => x.value.toNearest(0.01).equals(y.value.toNearest(0.01));
-
-const cIntervalsBetween = function
-  (i: Interval):
-  (x: Note, y: Note) => Unitless
-  /*
-  WRONG 
-  y1 = i * x
-  y2 = i * i * x = i * y1
-  y3 = i* i * i * x = i * y2
-
-  y = i^n * x
-  
-  y / x = i^n
-  n = log(y / x) / log(i)
-  */
+class Note <TNoteName extends string> extends Hertz
 {
-  return (x, y) => {
-    return u(y.value.div(x.value).log().div(i.value.log()).toNearest(0.01));
+  protected system: TuningSystem<TNoteName>;
+  private _names: TNoteName[] | undefined;
+
+  private constructor ({
+    frequency,
+    system
+  }: {
+    frequency: Hertz;
+    system: TuningSystem<TNoteName>;
+  })
+  {
+    super(frequency.v);
+    this.system = system;
+  }
+
+  public transpose (interval: Interval, n=s(1)): Note<TNoteName>
+  {
+    return Note.FromSystem(this.system)(this.shift(interval.times(n)));
+  }
+
+  get names (): TNoteName[] | undefined
+  {
+    if (!this._names) {
+      this._names = this.system.identify(this);
+    }
+
+    return this._names!;
+  }
+
+  public static FromSystem <TNoteName extends string> (system: TuningSystem<TNoteName>):
+    (nameOrFrequency: Hertz | TNoteName) => Note<TNoteName>
+  {
+    return (nameOrFrequency: Hertz | TNoteName) => {
+      if (typeof nameOrFrequency === 'string') {
+        return system.notes[nameOrFrequency];
+      }
+      const frequency = nameOrFrequency;
+
+      return new Note({
+        frequency,
+        system
+      });
+
+    };
+  }
+  
+  public toString (): string
+  {
+    return this.names ? this.names[0] : '?';
   }
 }
 
-const cIsInterval = function
-  (i: Interval):
-  (x: Note, y: Note) => boolean
-{
-  return (x: Note, y: Note) => cIntervalsBetween(i)(x, y).value.abs().equals(u(1).value);
-}
-
-const nTranspose = function
-  (x: Note, i: Interval, nTimes = u(1)):
-  Note
-{
-  return fmap((value) => i.value.pow(nTimes.value).mul(value), x);
-}
-
-export type {
-  Note
-};
 export {
-  cIntervalsBetween,
-  cIsInterval,
-  nTranspose,
-  nIsEqual
+  Note
 };

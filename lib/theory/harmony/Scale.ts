@@ -1,69 +1,108 @@
-import { fShiftBy } from '../../signal/Frequency';
 import { Interval } from '../../signal/Interval';
-import { isOctave } from '../convention/twelveToneEqualTemperament/intervals';
 import { Note } from './Note';
+import { TuningSystem } from './System';
+class AbstractScale <TNoteName extends string> {
+  protected intervals: Interval[];
+  protected system: TuningSystem<TNoteName>;
 
-interface AbstractScale {
-  steps: Interval[];
-}
-
-interface Scale {
-  notes: Note[];
-  degree: (i: number) => Note | undefined;
-}
-
-/**
- * Actualizes an AbstractScale by applying the Scale's Intervals starting from
- * the tonic. If the scale is octave-repeating, it generates one octave.
- * If the scale is not octave-repeating, it generates 100 notes.
- */
-const actualize = function (scale: AbstractScale, tonic: Note, options: {
-  numOctaves?: number;
-  numNotes?: number;
-}): Scale {
-  const {
-    numOctaves,
-    numNotes
-  } = {
-    numOctaves: 1,
-    numNotes: 100,
-    ...options
-  };
-
-  const notes = [ tonic ];
-
-  let currentStepIndex = 0;
-  let currentNote = tonic;
-  let octavesGenerated = 0;
-
-  for (;;) {
-    if (isOctave(tonic, currentNote)) {
-      octavesGenerated += 1;
-    }
-
-    if (octavesGenerated >= numOctaves || notes.length >= numNotes) {
-      break;
-    }
-
-    const currentStep = scale.steps[currentStepIndex];
-    const nextNote = fShiftBy(currentNote, currentStep);
-
-    notes.push(nextNote);
-
-    currentNote = nextNote;
-    currentStepIndex = (currentStepIndex + 1) % scale.steps.length;
+  protected constructor ({
+    intervals,
+    system
+  }: {
+    intervals: Interval[];
+    system: TuningSystem<TNoteName>;
+  })
+  {
+    this.intervals = intervals;
+    this.system = system;
   }
 
-  return {
-    notes,
-    degree: (i) => notes[i]
-  };
-};
+  public at (root: Note<TNoteName>): Scale<TNoteName>
+  {
+    return Scale.FromSystem(this.system)(root, ...this.intervals);
+  }
 
-export type {
+  public toString (): string
+  {
+    return `(R ${this.intervals.join(' ')})`;
+  }
+
+  public static FromSystem <TNoteName extends string> (system: TuningSystem<TNoteName>):
+    (...intervals: Interval[] | any) => AbstractScale<TNoteName>
+  {
+    return (...intervals) => new AbstractScale({ intervals, system });
+  }
+}
+
+class Scale <TNoteName extends string> extends AbstractScale<TNoteName>
+{
+  public notes: Note<TNoteName>[];
+
+  protected constructor ({
+    notes,
+    intervals,
+    system
+  }: {
+    notes: Note<TNoteName>[];
+    intervals: Interval[];
+    system: TuningSystem<TNoteName>
+  })
+  {
+    super({
+      intervals,
+      system
+    });
+    this.notes = notes;
+  }
+
+  public toString (): string
+  {
+    return `(${this.notes.join(' ')})`
+  }
+
+  public static FromSystem <TNoteName extends string> (system: TuningSystem<TNoteName>):
+    (root: Note<TNoteName>, ...intervalsOrNotes: Interval[] | Note<TNoteName>[]) => Scale<TNoteName>
+  {
+    return (root, ...intervalsOrNotes) => {
+      let intervals: Interval[] = [];
+      let notes: Note<TNoteName>[] = [ root ];
+
+      if (intervalsOrNotes.length === 0) {
+        return new Scale({ intervals, system, notes })
+      }
+      if (intervalsOrNotes[intervalsOrNotes.length - 1]?.u === 'Hz') {
+        notes = intervalsOrNotes as Note<TNoteName>[];
+        for (let i = 1; i < notes.length; i++) {
+          intervals.push(Interval.between(notes[0], notes[i]))
+        }
+      } else {
+        intervals = intervalsOrNotes as Interval[];
+        let note = root;
+
+        for (const interval of intervals) {
+          note = note.transpose(interval);
+          notes.push(note);
+        }
+      }
+
+      return new Scale({ intervals, system, notes })
+    };
+  }
+
+  public repeat (n=1): Scale <TNoteName>
+  {
+    const intervals = Array(n).fill(this.intervals).flat();
+
+    return Scale.FromSystem(this.system)(this.notes[0], ...intervals);
+  }
+
+  public degree (num: number): Note<TNoteName> | undefined
+  {
+    return this.notes[num - 1];
+  }
+}
+
+export {
   AbstractScale,
   Scale
-};
-export {
-  actualize
 };
