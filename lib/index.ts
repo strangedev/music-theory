@@ -1,7 +1,8 @@
 import { cent, major3rd, minor3rd, octave, perfect5th, semitone, wholeTone } from './theory/convention/twelveToneEqualTemperament/intervals';
 import { TwelveTone } from './theory/convention/twelveToneEqualTemperament/system';
 import { AbstractChord } from './theory/harmony/Chord';
-import { AbstractScale } from './theory/harmony/Scale';
+import { SymmetricScaleDefinition } from './theory/harmony/Scale/SymmtericScale';
+
 
 const print = (...xs: any[]) => console.log(...xs.map(x => `${x}`))
 
@@ -24,7 +25,7 @@ for (const note of Object.values(_)) {
 
 print('Scales:');
 
-const majorScale = AbstractScale.FromSystem(twto)(
+const majorScale = SymmetricScaleDefinition.FromSystem(twto)(
   wholeTone,
   wholeTone,
   semitone,
@@ -33,7 +34,7 @@ const majorScale = AbstractScale.FromSystem(twto)(
   wholeTone,
   semitone
 );
-const minorScale = AbstractScale.FromSystem(twto)(
+const minorScale = SymmetricScaleDefinition.FromSystem(twto)(
   wholeTone,
   semitone,
   wholeTone,

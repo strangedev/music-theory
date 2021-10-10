@@ -1,5 +1,5 @@
 import { s } from '../../../unit/Scalar';
-import { NamedNotes, Notes, TuningSystem } from '../../harmony/System';
+import { NamedNotes, Notes, TuningSystem } from '../../harmony/TuningSystem';
 import { concertA } from '../concertA';
 import { octave, semitone } from './intervals';
 
@@ -80,5 +80,6 @@ class TwelveTone extends TuningSystem<NoteNames>
 }
 
 export {
-  TwelveTone
+  TwelveTone,
+  NoteNames
 };

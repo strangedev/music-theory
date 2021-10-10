@@ -34,6 +34,16 @@ class TuningSystem <TNoteName extends string>
     return this._notes;
   }
 
+  get range (): { low: Note<TNoteName>; high: Note<TNoteName> }
+  {
+    const notes = Object.values<Note<TNoteName>>(this.notes);
+
+    return {
+      low: notes[0],
+      high: notes[notes.length - 1]
+    };
+  }
+
   public identify (frequency: Hertz): TNoteName[] | undefined
   {
     for (const { frequency: namedFrequency, names } of this.noteNames) {
