@@ -1,3 +1,4 @@
+import { Printable } from '../../../Printable';
 import { Note } from '../Note';
 import { ScaleDegree } from './ScaleDegree';
 
@@ -13,7 +14,7 @@ import { ScaleDegree } from './ScaleDegree';
  * The notes associated with a certain degree may therefore change
  * depending on the direction of the traversal.
  */
-interface IScale <TNoteName extends string> {
+interface IScale <TNoteName extends string> extends Printable {
   root: Note<TNoteName>;
   /**
    * Walk starts a traversal of the scale.

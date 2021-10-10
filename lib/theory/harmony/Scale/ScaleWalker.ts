@@ -2,6 +2,11 @@ import { Note } from '../Note';
 import { IScaleWalker, IScaleWalkerImplementation } from './IScaleWalker';
 import { ScaleDegree } from './ScaleDegree';
 
+/**
+ * ScaleWalker can be used to implement the `walk()` method of `IScale`.
+ * It works by supplying an `IScaleWalkerImplementation`, which turns differences in scale degrees
+ * into `Interval`s.
+ */
 class ScaleWalker <TNoteName extends string>
   implements IScaleWalker<TNoteName>
 {

@@ -1,4 +1,4 @@
-import { Chord } from '../harmony/Chord';
+import { Chord } from '../harmony/Chord/OldChord';
 import { Note } from '../harmony/Note';
 import { Beat } from './Beat';
 import { TimeSignature } from './TImeSignature';
