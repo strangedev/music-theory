@@ -35,7 +35,7 @@ class Interval extends Scalar
 
   public toString (): string
   {
-    return `<1:${this.v}>`;
+    return `:${this.v.toNearest(0.01)}`;
   }
 }
 

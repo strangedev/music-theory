@@ -1,7 +1,10 @@
-import { cent, major3rd, minor3rd, octave, perfect5th, semitone, wholeTone } from './theory/convention/twelveToneEqualTemperament/intervals';
+import { cent, major3rd, octave, perfect5th, semitone, wholeTone } from './theory/convention/twelveToneEqualTemperament/intervals';
 import { TwelveTone } from './theory/convention/twelveToneEqualTemperament/system';
-import { AbstractChord } from './theory/harmony/Chord';
-import { SymmetricScaleDefinition } from './theory/harmony/Scale/SymmtericScale';
+import { ScaleBasedChordTemplate } from './theory/harmony/Chord/templates/ScaleBasedChordTemplate';
+import { SymmetricScaleTemplate } from './theory/harmony/Scale/templates/symmetric/SymmetricScaleTemplate';
+import { Chord } from './theory/harmony/Chord/Chord';
+import { IntervalBasedChordTemplate } from './theory/harmony/Chord/templates/IntervalBasedChordTemplate';
+import { IChord } from './theory/harmony/Chord/IChord';
 
 
 const print = (...xs: any[]) => console.log(...xs.map(x => `${x}`))
@@ -25,7 +28,7 @@ for (const note of Object.values(_)) {
 
 print('Scales:');
 
-const majorScale = SymmetricScaleDefinition.FromSystem(twto)(
+const majorScale = new SymmetricScaleTemplate(
   wholeTone,
   wholeTone,
   semitone,
@@ -34,7 +37,7 @@ const majorScale = SymmetricScaleDefinition.FromSystem(twto)(
   wholeTone,
   semitone
 );
-const minorScale = SymmetricScaleDefinition.FromSystem(twto)(
+const minorScale = new SymmetricScaleTemplate(
   wholeTone,
   semitone,
   wholeTone,
@@ -44,39 +47,42 @@ const minorScale = SymmetricScaleDefinition.FromSystem(twto)(
   wholeTone,
 );
 
-const C = majorScale.at(_.C4);
+const C = majorScale.construct(_.C4);
 
 print('C scale', C);
 
 print('Scale degrees:');
 
-const Gsm = minorScale.at(_.Gs4);
+const F = majorScale.construct(_.F4);
 
 for (let i = 1; i <= 7; i++) {
-  print('Degree', i, 'of Gsm is', Gsm.degree(i)!);
+  print('Degree', i, 'of F is', F.degree(i)!);
 }
 
 print('Chords');
 
-const majorChord = AbstractChord.FromSystem(twto)(
-  major3rd,
-  perfect5th
-);
-const minorChord = AbstractChord.FromSystem(twto)(
-  minor3rd,
-  perfect5th
-);
+// Chords can be constructed from notes directly:
+let cMajorChord: IChord = new Chord(_.C4, _.E4, _.G4);
 
-print('The C major chord is', majorChord.at(_.C4));
+// Chords can also be defined more abstractly.
+// We can characterize a chord by the intervals of each note to the root:
+const majorChord = new IntervalBasedChordTemplate(major3rd, perfect5th);
+cMajorChord = majorChord.construct(_.C4);
+print('majorChord', majorChord, 'at', _.C4, 'is', cMajorChord);
+
+// We can also construct the chord by taking degrees from a scale:
+// Note that the root is implied.
+const minorChord = new ScaleBasedChordTemplate(minorScale, 3, 5);
+const cMinorChord = minorChord.construct(_.C4);
+print('minorChord', minorChord, 'at', _.C4, 'is', cMinorChord);
 
 print('Chord progressions:');
 print('ii V I in F');
 
-const F = majorScale.at(_.F4);
 const progression = [
-  minorChord.at(F.degree(2)!),
-  majorChord.at(F.degree(5)!),
-  majorChord.at(F.degree(1)!),
+  minorChord.construct(F.degree(2)!),
+  majorChord.construct(F.degree(5)!),
+  majorChord.construct(F.degree(1)!),
 ];
 for (const chord of progression) {
   print(chord);
