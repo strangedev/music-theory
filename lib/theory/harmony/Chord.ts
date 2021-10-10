@@ -1,6 +1,6 @@
 import { Interval } from '../../signal/Interval';
 import { Note } from './Note';
-import { TuningSystem } from './System';
+import { TuningSystem } from './TuningSystem';
 class AbstractChord <TNoteName extends string> {
   protected intervals: Interval[];
   protected system: TuningSystem<TNoteName>;

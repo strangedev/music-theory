@@ -1,7 +1,7 @@
 import { Hertz } from '../../signal/Frequency';
 import { Interval } from '../../signal/Interval';
 import { s, Scalar } from '../../unit/Scalar';
-import { TuningSystem } from './System';
+import { TuningSystem } from './TuningSystem';
 
 class Note <TNoteName extends string> extends Hertz
 {
